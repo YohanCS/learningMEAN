@@ -1,9 +1,28 @@
 // get the module we need
 const express = require('express'); 
 const path = require('path'); // standard module we get
+const mongoose = require('mongoose');
+
+// we installed mongoose so let's connect it
+mongoose.connect('mongodb://localhost/nodekb', {useNewUrlParser: true});
+let db = mongoose.connection;
+
+// Check connection 
+db.once('open', () => {
+    console.log('Connected to MongoDB');
+});
+
+// before we init app 
+// Check for DB errors
+db.on('error', (err) => {
+    console.log(err);
+});
 
 // init app
 const app = express();
+
+// Bring in Models from mongoose
+let Article = require('./models/article'); // to use article variable which is a model 
 
 // Load View Engine
 app.set('views', path.join(__dirname, 'views'));
@@ -12,33 +31,19 @@ app.set('view engine', 'pug');
 // GET request to homepage
 // req = request, res = response
 app.get('/', (req, res) => {
-    // create a static array of objects to loop through 
-    // placeholder for data that will be passed in
-    let articles = [
-        {
-            id: 1,
-            title: 'Article One',
-            author: 'Traversy Media',
-            body: 'Youtube video tutorial'
-        },
-        {
-            id: 2,
-            title: 'Article Two',
-            author: 'Yohan',
-            body: 'Youtube video tutorial'
-        },
-        {
-            id: 3,
-            title: 'Article Three',
-            author: 'Both',
-            body: 'Youtube video tutorial'
+    // empty function, err if there is any, and response which we call articles
+    Article.find({}, (err, articles) => {
+        if(err) {
+            console.log(err);
         }
-    ];
-    
-    res.render('index', {
-        title:'Articles',
-        articles: articles // pass in the articles array 
+        else {
+            res.render('index', {
+                title:'Articles',
+                articles: articles
+            });
+        }
     });
+    
 });
 
 // add route
